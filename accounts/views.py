@@ -7,7 +7,13 @@ from django.contrib.auth.hashers import make_password
 from django.utils.crypto import get_random_string
 from common.task import send_email
 from .decorators import redirect_authenticated_user
+from django.contrib.auth.decorators import login_required
 # Create your views here.
+
+@login_required(login_url='login')
+def home(request):
+    return render(request,"accounts/home")
+
 
 @redirect_authenticated_user
 def register(request):
@@ -82,7 +88,7 @@ def login(request):
     else: 
         return render(request,"accounts/login.html")
     
-    
+@login_required(login_url='login')   
 def logout(request):
     messages.sucess(request,"Logout sucessfull")
     auth.logout(request)
