@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 
 @login_required(login_url='login')
 def home(request):
-    return render(request,"accounts/home")
+    return render(request,"accounts/home.html")
 
 
 @redirect_authenticated_user
@@ -90,7 +90,7 @@ def login(request):
     
 @login_required(login_url='login')   
 def logout(request):
-    messages.sucess(request,"Logout sucessfull")
+    messages.success(request,"Logout sucessfull")
     auth.logout(request)
     return redirect('login')
 
@@ -102,7 +102,7 @@ def forgot_password(request):
         if user:
            access_token=get_random_string(20)
            token,_=Token.objects.update_or_create(
-               user__email=email.lower(),
+               user=user,
                defaults={
                    "access_token":access_token,
                    "created_at":datetime.now(timezone.utc)
@@ -118,6 +118,8 @@ def forgot_password(request):
                "emails/password_reset_link.html",
                email_data   
            )
+           messages.success(request,"Link sent sucessfully")
+           return redirect('login')
         else:
             messages.error(request,"This is not correct Email")
             return redirect('login')
@@ -127,14 +129,14 @@ def forgot_password(request):
     
 @redirect_authenticated_user    
 def verify_password_reset_link(request):
-    email= request.method.GET.get("email","")
-    access_token=request.method.GET.get("access_token","")
-    token=Token.objects.filter(email=email,access_token=access_token).first()
+    email= request.GET.get("email","")
+    access_token=request.GET.get("access_token","")
+    token=Token.objects.filter(user__email=email,access_token=access_token).first()
     if not token or  not token.is_valid():
         messages.error(request,"Expired Token")
         return redirect('login')
     else:
-        messages.sucess(request,"Token verification sucessfull")
+        messages.success(request,"Token verification sucessfull")
         return render(request,"accounts/set_new_password.html",{"email":email,"access_token":access_token})
     
 @redirect_authenticated_user    
@@ -147,10 +149,11 @@ def set_new_password(request):
         if password1 != password2:
             return render(request,"accounts/set_new_password.html",{"email":email,"access_token":access_token})
         else:
-            token=Token.objects.filter(email=email,access_token=access_token).first()
-            if not token or not token.is_valid():
+            token=Token.objects.filter(user__email=email,access_token=access_token).first()
+            if  token or  token.is_valid():
                 token.change_password(password1)
-                messages.success("Password changed sucessfully")
+                messages.success(request,"Password changed sucessfully")
+                token.delete()
                 return redirect('login')
             else: 
                 messages.error(request,"Expired Token")

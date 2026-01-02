@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Resume Analyzer{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center">
+    <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md border border-gray-100">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900">Welcome Back</h1>
+            <p class="text-gray-500 mt-2">Please enter your details to sign in</p>
+        </div>
+
+        <form method="POST" action="{% url 'login' %}" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" name="email" id="email" required 
+                    class="mt-1 block w-full px-4 py-3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 border" placeholder="you@example.com">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" name="password" id="password" required 
+                    class="mt-1 block w-full px-4 py-3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 border" placeholder="••••••••">
+                <div class="flex justify-end mt-1">
+                    <a href="{% url 'forgot-password' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500">Forgot password?</a>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150">
+                Sign In
+            </button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-gray-600">
+            Don't have an account? 
+            <a href="{% url 'register' %}" class="font-medium text-blue-600 hover:text-blue-500 hover:underline">Sign up for free</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

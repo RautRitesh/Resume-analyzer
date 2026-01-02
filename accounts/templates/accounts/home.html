@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Resume Analyzer{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-12">
+    <div class="text-center">
+        <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
+            Welcome, <span class="text-blue-600">{{ user.username }}</span>
+        </h1>
+        <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500">
+            You are now logged in. Start analyzing your resume to check its ATS compatibility score.
+        </p>
+        
+        <div class="mt-8 flex justify-center">
+            <div class="inline-flex rounded-md shadow">
+                <a href="#" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    Upload Resume
+                </a>
+            </div>
+            <div class="ml-3 inline-flex">
+                <a href="{% url 'logout' %}" class="inline-flex items-center justify-center px-5 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'emails/base_email.html' %}
+
+{% block subject %}Verify Your Account{% endblock %}
+
+{% block content %}
+    <h2 style="color: #111827; margin-top: 0;">Verify your email address</h2>
+    
+    <p>Hello,</p>
+    
+    <p>Thank you for signing up for Resume Analyzer! To complete your registration and start optimizing your resume, please use the verification code below:</p>
+    
+    <div class="code-box">
+        {{ verification_code }}
+    </div>
+    
+    <p>This code will expire in 20 minutes.</p>
+    
+    <p>If you didn't request this code, you can safely ignore this email.</p>
+    
+    <p style="margin-top: 30px;">
+        Best regards,<br>
+        <strong>The Resume Analyzer Team</strong>
+    </p>
+{% endblock %}
