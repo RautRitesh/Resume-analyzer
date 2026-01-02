@@ -4,3 +4,10 @@
 
 # LangGraph
 .langgraph_api/
+
+
+# Environment Variables (IMPORTANT)
+.env
+myenv/
+__pycache__/
+*.sqlite3
