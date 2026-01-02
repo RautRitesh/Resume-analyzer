@@ -31,4 +31,22 @@ class PendingUser(BaseModel):
         return True
     
     
+
+class Token(BaseModel):
+    access_token=models.CharField(max_length=255)
+    user=models.ForeignKey(User,on_delete=models.CASCADE,related_name='tokens')
     
+    def is_valid(self)->bool:
+        life_span_seconds=20*60
+        now=datetime.now(timezone.utc)
+        time_diff=now-self.created_at
+        time_diff= time_diff.total_seconds()
+        if time_diff>life_span_seconds:
+            return False 
+        return True
+    
+    def change_password(self,raw_password):
+        self.user:User 
+        self.user.set_password(raw_password=raw_password)
+        self.user.save()
+        
