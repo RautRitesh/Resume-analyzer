@@ -11,7 +11,7 @@ def dashboard(request):
     else:
         return redirect('upload')
     
-def get_analysis(request):
+def resumeanalysis(request):
     if request.method=="POST":
         ... 
     else:

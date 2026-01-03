@@ -1,5 +1,6 @@
 from django.urls import path,include
-from .models import dashboard
+from .views import dashboard, resumeanalysis
 urlpatterns = [
     path('dashboards/',dashboard,name='home'),
+    path('uploaddocument/',resumeanalysis,name='upload'),
 ]
