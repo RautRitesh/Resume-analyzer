@@ -137,3 +137,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_USER')
 # App Password (NOT your normal Gmail password)
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
+
+
+MEDIA_ROOT='/media/'
+MEDIA_URL=BASE_DIR/'media'

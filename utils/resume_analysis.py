@@ -8,8 +8,9 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-LLM_FAST=ChatGroq(model="llama3-8b-8192",temperature=0)
-LLM_SMART=ChatGroq(model="llama3-70b-8192",temperature=0.1)
+api_key=os.getenv("GROQ_API_KEY")
+LLM_FAST=ChatGroq(model="llama3-8b-8192",temperature=0,api_key=api_key)
+LLM_SMART=ChatGroq(model="llama3-70b-8192",temperature=0.1,api_key=api_key)
 EMBEDDINGS=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 def extract_text_from_pdf(file_path):
