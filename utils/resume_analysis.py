@@ -9,8 +9,8 @@ from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 api_key=os.getenv("GROQ_API_KEY")
-LLM_FAST=ChatGroq(model="llama3-8b-8192",temperature=0,api_key=api_key)
-LLM_SMART=ChatGroq(model="llama3-70b-8192",temperature=0.1,api_key=api_key)
+LLM_FAST=ChatGroq(model="llama-3.1-8b-instant",temperature=0,api_key=api_key)
+LLM_SMART=ChatGroq(model="llama-3.3-70b-versatile",temperature=0.1,api_key=api_key)
 EMBEDDINGS=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 def extract_text_from_pdf(file_path):
@@ -84,7 +84,7 @@ def analyze_resume_compatiblilty(file_path,job_description):
         else:
             missing_keywords.append(req)       
             
-    overall_match_score=round(hits/max(len(requirements,1))*100,1) 
+    overall_match_score=round((hits/max(len(requirements),1))*100,1) 
     summary_prompt=f"""
     candidate_score"{overall_match_score}/100.
     Missing Skills:{','.join(missing_keywords[:5])}.  
@@ -108,7 +108,9 @@ def analyze_resume_compatiblilty(file_path,job_description):
         "Experience":overall_match_score,
         "Education":100.0 if overall_match_score > 50 else 80.0
     }
-    
+    print(overall_match_score)
+    print(section_match_score)
+    print(analysis_summary)
     return {
         "overall_match_score":overall_match_score,
         "section_match_score":section_match_score,
