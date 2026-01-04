@@ -50,7 +50,7 @@ def analyze_resume_compatiblilty(file_path,job_description):
         raw_reqs=LLM_FAST.invoke(req_prompt).content
         lines=raw_reqs.strip().split('\n')
         for line in lines:
-            clean=re.subr('^[\d\.\-\*•]+\s*', '', line).strip() # cleaning lines form special character and . 
+            clean=re.sub('^[\d\.\-\*•]+\s*', '', line).strip() # cleaning lines form special character and . 
             if len(clean)>2 and len(clean) < 50  and "Here are " not in clean:
                 requirements.append(clean)
     except Exception as e:
