@@ -7,9 +7,10 @@ from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_experimental.text_splitter import SemanticChunker
 
 api_key=os.getenv("GROQ_API_KEY")
-LLM_FAST=ChatGroq(model="llama-3.1-8b-instant",temperature=0,api_key=api_key)
+LLM_FAST=ChatGroq(model="llama-3.3-70b-versatile",temperature=0,api_key=api_key)
 LLM_SMART=ChatGroq(model="llama-3.3-70b-versatile",temperature=0.1,api_key=api_key)
 EMBEDDINGS=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
@@ -23,10 +24,11 @@ def extract_text_from_pdf(file_path):
         return ""
     
 def segment_resume(text):
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=100,
-        separators=["\n\n","\n"," ",""]
+   
+    splitter=SemanticChunker(
+        embeddings=EMBEDDINGS,
+        breakpoint_threshold_type='percentile',
+        breakpoint_threshold_amount=90
         
     )
     return splitter.create_documents([text])
