@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <title>{% block title %}Resume Analyzer | AI Powered ATS Checker{% endblock %}</title>
+    <meta name="description" content="{% block description %}Analyze your resume with our AI-powered ATS checker. Optimize your CV for Applicant Tracking Systems and get hired faster.{% endblock %}">
+    <meta name="keywords" content="ATS checker, resume analyzer, CV optimization, AI resume review, job search tools">
+    <meta name="robots" content="index, follow">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        .toast-enter {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        .toast-enter-active {
+            transform: translateY(0);
+            opacity: 1;
+            transition: all 0.5s ease-out;
+        }
+        .toast-exit {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast-exit-active {
+            transform: translateY(-100%);
+            opacity: 0;
+            transition: all 0.5s ease-in;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <a href="{% url 'home' %}" class="flex-shrink-0 flex items-center font-bold text-xl text-blue-600">
+                        ResumeAnalyzer
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'logout' %}" class="text-gray-600 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="{% url 'register' %}" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium">Get Started</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div id="message-container" class="fixed top-5 right-0 left-0 mx-auto w-full max-w-md z-50 flex flex-col items-center space-y-2 pointer-events-none">
+        {% for message in messages %}
+            <div class="message-toast pointer-events-auto shadow-lg rounded-lg px-6 py-4 text-white font-medium flex items-center shadow-xl transform transition-all duration-500
+                {% if message.tags == 'error' %}bg-red-500{% elif message.tags == 'success' %}bg-green-500{% else %}bg-blue-500{% endif %}">
+                
+                {% if message.tags == 'error' %}
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                {% else %}
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                {% endif %}
+                
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="flex-grow container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-white border-t mt-auto">
+        <div class="max-w-7xl mx-auto py-6 px-4 overflow-hidden sm:px-6 lg:px-8">
+            <p class="mt-8 text-center text-base text-gray-400">&copy; {% now "Y" %} Resume Analyzer. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('.message-toast');
+            
+            toasts.forEach((toast) => {
+                // 1. Show animation
+                toast.classList.add('toast-enter-active');
+                
+                // 2. Wait 2 seconds, then remove
+                setTimeout(() => {
+                    toast.classList.remove('toast-enter-active'); // Remove entrance class if still there
+                    toast.classList.add('opacity-0', '-translate-y-full'); // Tailwind classes for fade out and move up
+                    
+                    // Remove from DOM after animation finishes (500ms)
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 500);
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Result{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8">
+    
+    {% if not analysis %}
+    <div class="text-center py-20">
+        <h2 class="text-2xl font-bold text-gray-700">No Analysis Found</h2>
+        <a href="{% url 'upload' %}" class="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg">Upload Resume</a>
+    </div>
+    {% else %}
+
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Analysis Report</h1>
+            <p class="text-gray-500">Role: <span class="font-semibold text-blue-600">{{ analysis.job_title }}</span></p>
+        </div>
+        <a href="{% url 'upload' %}" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">New Analysis</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Match Score</p>
+                <p class="text-5xl font-extrabold {% if analysis.overall_match_score >= 70 %}text-green-600{% else %}text-orange-500{% endif %}">
+                    {{ analysis.overall_match_score }}%
+                </p>
+            </div>
+        </div>
+
+        <div class="col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-sm font-medium text-gray-500 mb-2">AI Verdict</h3>
+            <p class="text-gray-800">{{ analysis.analysis_summary }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="bg-indigo-50 px-6 py-4 border-b border-indigo-100">
+                <h2 class="font-bold text-indigo-800">✨ Improvement Suggestions</h2>
+            </div>
+            <div class="p-6">
+                <ul class="space-y-3">
+                    {% for item in analysis.improved_suggestion %}
+                    <li class="flex items-start">
+                        <span class="text-green-500 mr-2">✔</span>
+                        <span class="text-gray-700">{{ item }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-gray-500">No suggestions generated.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="bg-red-50 px-6 py-4 border-b border-red-100">
+                <h2 class="font-bold text-red-800">⚠️ Missing Requirements</h2>
+            </div>
+            <div class="p-6">
+                <div class="flex flex-wrap gap-2">
+                    {% for key in analysis.missing_keywords %}
+                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">{{ key }}</span>
+                    {% empty %}
+                    <span class="text-green-600">All key requirements met!</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-1 lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h2 class="font-bold text-gray-800">🔍 Verified Evidence (RAG)</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                {% for key, proof in analysis.retrieved_evidence.items %}
+                <div class="p-4">
+                    <p class="text-sm font-semibold text-gray-900 mb-1">Matched: {{ key }}</p>
+                    <p class="text-sm text-gray-600 italic pl-3 border-l-2 border-green-500">"{{ proof }}"</p>
+                </div>
+                {% empty %}
+                <div class="p-6 text-gray-500 text-center">No specific evidence snippets retrieved.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
