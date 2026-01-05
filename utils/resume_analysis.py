@@ -26,7 +26,6 @@ def clean_json_output(text):
     if not text:
         return "{}"
     
-    # 1. Remove Markdown code blocks
     text = text.replace("```json", "").replace("```", "").strip()
     
     # 2. Find the start { and end } to ignore "Here is your JSON:" prefix
