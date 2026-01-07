@@ -14,15 +14,12 @@ api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     print("WARNING: GROQ_API_KEY not found.")
 
-# Models
+# Models using different
 LLM_FAST = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, api_key=api_key)
 LLM_SMART = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.3, api_key=api_key)
 EMBEDDINGS = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 def clean_json_output(text):
-    """
-    Robustly extracts JSON from a string, handling Markdown and extra text.
-    """
     if not text:
         return "{}"
     
