@@ -2,7 +2,9 @@ from django.shortcuts import render,redirect
 from .models import ResumeAnalysis
 from django.contrib import auth,messages
 from utils.resume_analysis import analyze_resume_compatiblilty
+from django.contrib.auth.decorators import login_required
 # Create your views here.
+@login_required(login_url='login')
 def dashboard(request):
     latest_analysis=request.user.resume_analysis.first()
     if latest_analysis and latest_analysis.resume_file:
@@ -12,7 +14,8 @@ def dashboard(request):
         return render(request,"applicants/dashboard.html",context)
     else:
         return redirect('upload')
-    
+   
+@login_required(login_url='login') 
 def resumeanalysis(request):
     if request.method=="POST":
         job_title=request.POST.get("job_title")

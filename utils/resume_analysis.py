@@ -8,16 +8,20 @@ from langchain_community.vectorstores import FAISS
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage
+from langchain_google_genai  import GoogleGenerativeAIEmbeddings
 
 # Initialize AI Components
 api_key = os.getenv("GROQ_API_KEY")
+api_key_2=os.getenv("GEMINI_API_KEY")
 if not api_key:
     print("WARNING: GROQ_API_KEY not found.")
 
 # Models using different
 LLM_FAST = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, api_key=api_key)
 LLM_SMART = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.3, api_key=api_key)
-EMBEDDINGS = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+#EMBEDDINGS = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+EMBEDDINGS=GoogleGenerativeAIEmbeddings(model="models/text-embedding-004",
+                                        api_key=api_key_2)
 
 def clean_json_output(text):
     if not text:
