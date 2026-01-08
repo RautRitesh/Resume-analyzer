@@ -3,7 +3,7 @@ from .models import ResumeAnalysis
 from django.contrib import auth,messages
 from utils.resume_analysis import analyze_resume_compatiblilty
 from django.contrib.auth.decorators import login_required
-# Create your views here.
+# Create your views here using login required also for security
 @login_required(login_url='login')
 def dashboard(request):
     latest_analysis=request.user.resume_analysis.first()
