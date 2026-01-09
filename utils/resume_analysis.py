@@ -126,7 +126,7 @@ def calculate_keyword_score(resume_text, job_description):
 
 def calculate_impact_score(resume_text):
     """
-    Phase 2.C: Impact Analysis (Fixes JSON error)
+    Phase 2: Impact Analysis (Fixes JSON error)
     """
     prompt = f"""
     You are a Senior Technical Recruiter. Review the 'Experience' and 'Projects' sections.
