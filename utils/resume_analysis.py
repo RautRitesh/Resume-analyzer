@@ -128,6 +128,7 @@ def calculate_impact_score(resume_text):
     """
     Phase 2: Impact Analysis (Fixes JSON error)
     """
+    # this is the prompt for ai
     prompt = f"""
     You are a Senior Technical Recruiter. Review the 'Experience' and 'Projects' sections.
     
