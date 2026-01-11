@@ -11,6 +11,7 @@ from langchain_core.messages import HumanMessage
 from langchain_google_genai  import GoogleGenerativeAIEmbeddings
 
 # Initialize AI Components
+# using 2 api 
 api_key = os.getenv("GROQ_API_KEY")
 api_key_2=os.getenv("GEMINI_API_KEY")
 if not api_key:
