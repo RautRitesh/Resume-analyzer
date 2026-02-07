@@ -20,8 +20,7 @@ if not api_key:
 # Models using different
 LLM_FAST = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, api_key=api_key)
 LLM_SMART = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.3, api_key=api_key)
-#EMBEDDINGS = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-EMBEDDINGS=GoogleGenerativeAIEmbeddings(model="models/text-embedding-004",
+EMBEDDINGS=GoogleGenerativeAIEmbeddings(model="gemini-embedding-001",
                                         api_key=api_key_2)
 
 def clean_json_output(text):
@@ -29,8 +28,6 @@ def clean_json_output(text):
         return "{}"
     
     text = text.replace("```json", "").replace("```", "").strip()
-    
-    # 2. Find the start { and end } to ignore "Here is your JSON:" prefix
     start_index = text.find("{")
     end_index = text.rfind("}")
     
@@ -69,7 +66,6 @@ def calculate_semantic_score(resume_text, job_description):
         count = 0
         
         for res in results:
-            # Handle (Document, score) or (score, Document) safely
             score = 1.0
             if isinstance(res, tuple):
                 for item in res:
@@ -83,7 +79,6 @@ def calculate_semantic_score(resume_text, job_description):
             return 0.0, []
 
         avg_distance = total_score / count
-        # Normalize: L2 distance usually 0.5 to 1.5. 
         semantic_score = max(0, min(100, (1 / (1 + avg_distance * 0.5)) * 100))
         
         return float(round(semantic_score, 1)), results  # <--- Ensure float return
