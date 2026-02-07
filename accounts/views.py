@@ -9,7 +9,7 @@ from common.task import send_email
 from .decorators import redirect_authenticated_user
 from django.contrib.auth.decorators import login_required
 # Create your views here.
-
+#small update
 @login_required(login_url='login')
 def home(request):
     return render(request,"accounts/home.html")
