@@ -1,112 +1,88 @@
 {% extends 'base.html' %}
 
-{% block title %}Reverse-ATS Result{% endblock %}
-
 {% block content %}
-<div class="max-w-7xl mx-auto py-8">
-    
-    {% if not analysis %}
-    <div class="text-center py-20">
-        <h2 class="text-2xl font-bold text-gray-700">No Analysis Found</h2>
-        <a href="{% url 'upload' %}" class="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg">Upload Resume</a>
-    </div>
-    {% else %}
-
-    <div class="mb-8 flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <div>
-            <h1 class="text-3xl font-extrabold text-gray-900">ATS Report</h1>
-            <p class="text-gray-500 mt-1">Role: <span class="font-semibold text-blue-600">{{ analysis.job_title }}</span></p>
-        </div>
-        <div class="text-right">
-             <a href="{% url 'upload' %}" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">New Analysis</a>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        
-        <div class="bg-blue-600 p-6 rounded-xl shadow-lg text-white flex flex-col justify-between">
-            <div>
-                <p class="text-blue-100 font-medium uppercase tracking-wider text-xs">Overall Fit</p>
-                <p class="text-6xl font-black mt-2">{{ analysis.overall_match_score }}<span class="text-3xl">%</span></p>
-            </div>
-            <p class="text-sm text-blue-100 mt-4">{{ analysis.analysis_summary }}</p>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-gray-700">Semantic Match</h3>
-                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">40% Weight</span>
-            </div>
-            <p class="text-4xl font-bold text-indigo-600">{{ analysis.section_match_score.Semantic_Match|default:0 }}%</p>
-            <p class="text-xs text-gray-500 mt-2">How conceptually similar your experience is to the job.</p>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-gray-700">Hard Keywords</h3>
-                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">40% Weight</span>
-            </div>
-            <p class="text-4xl font-bold text-green-600">{{ analysis.section_match_score.Keyword_Match|default:0 }}%</p>
-            <p class="text-xs text-gray-500 mt-2">Exact match of critical hard skills found in your PDF.</p>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-gray-700">Impact Score</h3>
-                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">20% Weight</span>
-            </div>
-            <p class="text-4xl font-bold text-purple-600">{{ analysis.section_match_score.Impact_Score|default:0 }}%</p>
-            <p class="text-xs text-gray-500 mt-2">Quality of writing, metrics, and action verbs.</p>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        <div class="bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
-            <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center">
-                <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <h2 class="font-bold text-red-800">Missing Keywords (Critical Gap)</h2>
-            </div>
-            <div class="p-6">
-                <p class="text-sm text-gray-600 mb-4">Your resume is missing these exact keywords extracted from the JD:</p>
-                <div class="flex flex-wrap gap-2">
-                    {% for key in analysis.missing_keywords %}
-                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium border border-red-200">
-                        {{ key }}
-                    </span>
-                    {% empty %}
-                    <div class="text-center w-full py-4">
-                        <span class="text-green-600 font-medium">✨ Amazing! No critical keywords missing.</span>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <h3>Match Score</h3>
+                    <div class="display-4 text-primary font-weight-bold">
+                        {{ analysis.overall_match_score }}%
                     </div>
+                    <hr>
+                    <p>Skill Match: {{ analysis.section_match_score.Skill_Match }}%</p>
+                    <p>Impact Score: {{ analysis.section_match_score.Impact_Score }}%</p>
+                </div>
+            </div>
+            
+            <div class="card shadow mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h5>Missing Skills</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for skill in analysis.missing_keywords %}
+                        <li class="list-group-item text-danger">{{ skill }}</li>
+                    {% empty %}
+                        <li class="list-group-item text-success">No missing skills found!</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card shadow mt-4">
+                <div class="card-header bg-warning">
+                    <h5>Improvement Suggestions</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for suggestion in analysis.improved_suggestion %}
+                        <li class="list-group-item"><small>{{ suggestion }}</small></li>
+                    {% empty %}
+                        <li class="list-group-item text-success">Great formatting!</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4>Resume Analysis: {{ analysis.parsed_resume_data.full_name }}</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Professional Summary</h5>
+                    <p>{{ analysis.parsed_resume_data.summary }}</p>
+                    <hr>
+
+                    <h5>Work Experience</h5>
+                    {% for job in analysis.parsed_resume_data.work_experience %}
+                        <div class="mb-3">
+                            <strong>{{ job.role }}</strong> at <span class="text-muted">{{ job.company }}</span>
+                            <br>
+                            <small class="text-muted">{{ job.duration }}</small>
+                            <ul>
+                                {% for achievement in job.key_achievements %}
+                                    <li>{{ achievement }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endfor %}
+                    <hr>
+
+                    <h5>Projects</h5>
+                    {% for project in analysis.parsed_resume_data.projects %}
+                        <div class="mb-3">
+                            <strong>{{ project.name }}</strong>
+                            <p>{{ project.description }}</p>
+                            <small class="text-primary">Tech: {{ project.technologies|join:", " }}</small>
+                        </div>
                     {% endfor %}
                 </div>
             </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-purple-100 overflow-hidden">
-            <div class="bg-purple-50 px-6 py-4 border-b border-purple-100 flex items-center">
-                <svg class="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                <h2 class="font-bold text-purple-800">Bullet Point Rewrites</h2>
-            </div>
-            <div class="p-6 space-y-4">
-                {% for suggestion in analysis.improved_suggestion %}
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div class="mb-2">
-                        <span class="text-xs font-bold text-red-500 uppercase">Weak Point ({{ suggestion.issue }})</span>
-                        <p class="text-sm text-gray-600 line-through mt-1">{{ suggestion.original }}</p>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-green-600 uppercase">AI Rewrite</span>
-                        <p class="text-sm text-gray-900 font-medium mt-1">{{ suggestion.rewrite }}</p>
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-gray-500 italic">No specific rewrite suggestions generated.</p>
-                {% endfor %}
+            
+            <div class="mt-4 text-right">
+                <a href="#" class="btn btn-lg btn-success">Start AI Interview Simulation &rarr;</a>
             </div>
         </div>
-
     </div>
-    {% endif %}
 </div>
 {% endblock %}

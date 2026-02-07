@@ -1,40 +1,17 @@
 import os
-import json
 import re
+import json
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_groq import ChatGroq
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_experimental.text_splitter import SemanticChunker
-from langchain_core.documents import Document
-from langchain_core.messages import HumanMessage
-from langchain_google_genai  import GoogleGenerativeAIEmbeddings
+from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel, Field
+from typing import List
 
-# Initialize AI Components
-# using 2 api  for better more apis request
+# Initialize LLM
 api_key = os.getenv("GROQ_API_KEY")
-api_key_2=os.getenv("GEMINI_API_KEY")
-if not api_key:
-    print("WARNING: GROQ_API_KEY not found.")
+llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, api_key=api_key)
 
-# Models using different
-LLM_FAST = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, api_key=api_key)
-LLM_SMART = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.3, api_key=api_key)
-EMBEDDINGS=GoogleGenerativeAIEmbeddings(model="gemini-embedding-001",
-                                        api_key=api_key_2)
-
-def clean_json_output(text):
-    if not text:
-        return "{}"
-    
-    text = text.replace("```json", "").replace("```", "").strip()
-    start_index = text.find("{")
-    end_index = text.rfind("}")
-    
-    if start_index != -1 and end_index != -1:
-        text = text[start_index : end_index + 1]
-    
-    return text
+# --- 1. Helpers & Extraction ---
 
 def extract_text_from_pdf(file_path):
     try:
@@ -46,155 +23,117 @@ def extract_text_from_pdf(file_path):
         print(f"Error loading PDF: {e}")
         return ""
 
-def calculate_semantic_score(resume_text, job_description):
-    """
-    Phase 2.A: Semantic Match (Fixes float32 error)
-    """
-    try:
-        if not resume_text or not job_description:
-            return 0.0, []
+class JobDescriptionSchema(BaseModel):
+    required_skills: List[str] = Field(description="Must-have technical skills")
+    nice_to_have: List[str] = Field(description="Bonus skills")
+    min_experience_years: int = Field(description="Minimum years of experience required")
 
-        text_splitter = SemanticChunker(EMBEDDINGS)
-        chunks = text_splitter.create_documents([resume_text])
-        if not chunks:
-            chunks = [Document(page_content=resume_text)]
+def parse_job_description(jd_text):
+    """Extracts structured requirements from the JD text."""
+    structured_llm = llm.with_structured_output(JobDescriptionSchema)
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Extract technical requirements from the Job Description. Normalize skill names (e.g., 'Py' -> 'Python')."),
+        ("human", "{jd_text}"),
+    ])
+    chain = prompt | structured_llm
+    return chain.invoke({"jd_text": jd_text})
 
-        vector_store = FAISS.from_documents(chunks, EMBEDDINGS)
-        results = vector_store.similarity_search_with_score(job_description, k=3)
-        
-        total_score = 0.0
-        count = 0
-        
-        for res in results:
-            score = 1.0
-            if isinstance(res, tuple):
-                for item in res:
-                    if isinstance(item, (int, float)):
-                        score = float(item)  # <--- CRITICAL FIX: Convert float32 to float
+# --- 2. The BS Detector (Heuristics) ---
+
+def analyze_impact_heuristics(work_experience):
+    """
+    Checks bullet points for numbers, metrics, and strong verbs.
+    Returns a score (0-100) and specific feedback.
+    """
+    if not work_experience:
+        return 0, ["No work experience section found."]
+
+    total_bullets = 0
+    strong_bullets = 0
+    feedback = []
+    
+    # Regex for metrics (e.g., 20%, $50k, +10x, 500 users)
+    metric_pattern = r"(\d+%|\$\d+|\d+x|\+\d+|\d+ users|\d+ customers|\d+ requests)"
+
+    for role in work_experience:
+        if not role.key_achievements:
+            feedback.append(f"Role '{role.role}' has no bullet points.")
+            continue
             
-            total_score += score
-            count += 1
-        
-        if count == 0:
-            return 0.0, []
+        for bullet in role.key_achievements:
+            total_bullets += 1
+            if re.search(metric_pattern, bullet):
+                strong_bullets += 1
+            else:
+                # Limit feedback to first 3 issues to avoid clutter
+                if len(feedback) < 3:
+                    feedback.append(f"Weak point in '{role.role}': '{bullet[:50]}...' lacks metrics.")
 
-        avg_distance = total_score / count
-        semantic_score = max(0, min(100, (1 / (1 + avg_distance * 0.5)) * 100))
-        
-        return float(round(semantic_score, 1)), results  # <--- Ensure float return
-    except Exception as e:
-        print(f"Semantic Error: {e}")
-        return 50.0, []
+    if total_bullets == 0:
+        return 0, ["Add bullet points to your experience."]
 
-def calculate_keyword_score(resume_text, job_description):
+    score = int((strong_bullets / total_bullets) * 100)
+    return score, feedback
+
+# --- 3. The Main Coordinator ---
+
+def analyze_resume_compatibility(parsed_resume, jd_text):
     """
-    Phase 2.B: Keyword Match
+    Orchestrates the comparison between Structured Resume and JD.
     """
-    prompt = f"""
-    Act as a strict ATS system. Extract the top 15 most critical technical 'Hard Skills' from the JD.
-    Return ONLY a valid JSON list of strings.
-    JD: {job_description[:4000]}
-    """
-    try:
-        # Use HumanMessage to prevent string errors
-        response = LLM_FAST.invoke([HumanMessage(content=prompt)]).content
-        clean_json = clean_json_output(response)
-        keywords = json.loads(clean_json)
-        if not isinstance(keywords, list): keywords = []
-    except Exception as e:
-        print(f"Keyword Error: {e}")
-        keywords = []
-
-    if not keywords: return 0.0, [], []
-
-    found = []
-    missing = []
+    # 1. Parse JD into Structure
+    parsed_jd = parse_job_description(jd_text)
     
-    for kw in keywords:
-        pattern = r"(?i)\b" + re.escape(kw) + r"\b"
-        if re.search(pattern, resume_text):
-            found.append(kw)
-        else:
-            missing.append(kw)
+    # 2. Skill Match (Set Intersection)
+    resume_skills = set([s.lower() for s in parsed_resume['skills']])
+    jd_skills = set([s.lower() for s in parsed_jd.required_skills])
+    
+    matched_skills = resume_skills.intersection(jd_skills)
+    missing_skills = jd_skills - resume_skills
+    
+    skill_score = (len(matched_skills) / len(jd_skills) * 100) if jd_skills else 100
+    
+    # 3. Impact Score (Heuristics)
+    # Note: parsing Pydantic objects back from JSON might require converting lists to objects
+    # For simplicity, we assume parsed_resume is the Dictionary we saved to DB
+    
+    # We need to access the 'work_experience' list from the dictionary
+    experience_list = parsed_resume.get('work_experience', [])
+    
+    # We need to treat them as objects for the helper function, or adjust helper.
+    # Let's adjust helper inputs quickly via a temporary object-like wrapper or just processing dicts
+    # Re-using the logic above, but adapted for Dicts:
+    impact_score = 0
+    impact_feedback = []
+    
+    total_bullets = 0
+    strong_bullets = 0
+    metric_pattern = r"(\d+%|\$\d+|\d+x|\+\d+|\d+ users|\d+ customers)"
+    
+    for role in experience_list:
+        achievements = role.get('key_achievements', [])
+        for bullet in achievements:
+            total_bullets += 1
+            if re.search(metric_pattern, bullet):
+                strong_bullets += 1
+            elif len(impact_feedback) < 3:
+                role_name = role.get('role', 'Unknown Role')
+                impact_feedback.append(f"Weak Point ({role_name}): Add metrics to '{bullet[:40]}...'")
 
-    score = (len(found) / len(keywords)) * 100
-    return float(round(score, 1)), found, missing
-
-def calculate_impact_score(resume_text):
-    """
-    Phase 2: Impact Analysis (Fixes JSON error)
-    """
-    # this is the prompt for ai
-    prompt = f"""
-    You are a Senior Technical Recruiter. Review the 'Experience' and 'Projects' sections.
+    if total_bullets > 0:
+        impact_score = int((strong_bullets / total_bullets) * 100)
     
-    Task:
-    1. Identify the 3 weakest bullet points (lack of metrics/action verbs).
-    2. Identify the Context (Project Name or Job Title).
-    3. Rewrite them.
+    # 4. Final Weighted Score
+    # Skills (60%), Formatting/Impact (40%)
+    overall_score = (skill_score * 0.6) + (impact_score * 0.4)
     
-    Resume Text:
-    {resume_text[:4000]}
-    
-    Return a valid JSON object with this EXACT structure:
-    {{
-        "impact_score": <int 0-100>,
-        "summary_verdict": "<short critique>",
-        "weak_points": [
-            {{
-                "context": "<Project Name>",
-                "original": "<original text>",
-                "rewrite": "<improved text>",
-                "issue": "<issue description>"
-            }}
-        ]
-    }}
-    """
-    
-    try:
-        response = LLM_SMART.invoke([HumanMessage(content=prompt)]).content
-        
-        # USE THE NEW CLEANER FUNCTION
-        clean_json = clean_json_output(response)
-        
-        data = json.loads(clean_json)
-        return float(data.get("impact_score", 50)), data
-    except Exception as e:
-        print(f"Impact Error: {e}")
-        return 50.0, {"summary_verdict": "Analysis unavailable", "weak_points": []}
-
-def analyze_resume_compatiblilty(file_path, job_description):
-    # 1. Ingestion
-    full_text = extract_text_from_pdf(file_path)
-    if not full_text:
-        return {"error": "Could not read resume"}
-
-    # 2. Parallel Scoring
-    sem_score, sem_results = calculate_semantic_score(full_text, job_description)
-    key_score, found, missing = calculate_keyword_score(full_text, job_description)
-    imp_score, impact_data = calculate_impact_score(full_text)
-    
-    # 3. Final Score
-    total_score = (0.4 * sem_score) + (0.4 * key_score) + (0.2 * imp_score)
-    
-    # 4. Evidence
-    retrieved_evidence = {}
-    if sem_results:
-        for i, res in enumerate(sem_results):
-            # Safe tuple unpacking
-            doc = res[0] if isinstance(res, tuple) else res
-            content = getattr(doc, 'page_content', str(doc))[:200]
-            retrieved_evidence[f"Match {i+1}"] = content + "..."
-
     return {
-        "overall_match_score": float(round(total_score, 1)), # Ensure float
+        "overall_match_score": round(overall_score, 1),
         "section_match_score": {
-            "Semantic_Match": sem_score,
-            "Keyword_Match": key_score,
-            "Impact_Score": imp_score
+            "Skill_Match": round(skill_score, 1),
+            "Impact_Score": round(impact_score, 1)
         },
-        "retrieved_evidence": retrieved_evidence,
-        "missing_keywords": missing,
-        "analysis_summary": impact_data.get("summary_verdict", ""),
-        "improved_suggestion": impact_data.get("weak_points", [])
+        "missing_keywords": list(missing_skills),
+        "improved_suggestion": impact_feedback
     }
