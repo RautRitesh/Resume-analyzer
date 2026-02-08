@@ -63,7 +63,7 @@ def verify_code(request):
             messages.success(request,"Verification done sucessfully")
             auth.login(request,real_user)
             user.delete()
-            return redirect('home')  
+            return redirect('dashboard')  
         else:
             messages.error(request,"Expired Code")
             return render(request,"accounts/verify_code.html",{"email":email})
@@ -80,7 +80,7 @@ def login(request):
         if user is not None:
             messages.success(request,"Login sucessfull")
             auth.login(request,user)
-            return redirect('home')
+            return redirect('dashboard')
         else:
             messages.error(request,"Invalid Email or Password")
             return redirect('login')
