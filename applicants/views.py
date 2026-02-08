@@ -50,12 +50,14 @@ def resumeanalysis(request):
             print("Analyzing Compatibility...")
             # --- FIX: Call the correct function name ---
             results = analyze_resume_compatibility(structured_data, job_description)
+            print(results)
             
             # 5. Save Results
             analysis.overall_match_score = results["overall_match_score"]
             analysis.section_match_score = results["section_match_score"]
             analysis.missing_keywords = results["missing_keywords"]
             analysis.improved_suggestion = results["improved_suggestion"]
+            print(analysis.section_match_score)
             
             analysis.save()
             

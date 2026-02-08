@@ -33,13 +33,52 @@ def parse_job_description(jd_text):
     structured_llm = llm.with_structured_output(JobDescriptionSchema)
     
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "Extract technical requirements from the Job Description. Normalize skill names (e.g., 'Py' -> 'Python')."),
+        ("system", "Extract technical requirements from the Job Description. Return a clean list of strings."),
         ("human", "{jd_text}"),
     ])
     chain = prompt | structured_llm
     return chain.invoke({"jd_text": jd_text})
 
-# --- 2. The BS Detector (Heuristics) ---
+# --- 2. Semantic Skill Matcher (NEW) ---
+
+class SkillMatchSchema(BaseModel):
+    match_percentage: float = Field(description="0-100 score based on semantic coverage. E.g., 'Tensorflow' matches 'Neural Networks'.")
+    missing_skills: List[str] = Field(description="Skills from the JD that are completely missing (semantically) from the resume.")
+    matching_skills: List[str] = Field(description="Skills from the JD that were found in the resume (directly or semantically).")
+
+def evaluate_semantic_match(resume_skills, jd_skills):
+    """
+    Uses LLM to compare skills semantically instead of exact string matching.
+    """
+    if not jd_skills:
+        return SkillMatchSchema(match_percentage=100.0, missing_skills=[], matching_skills=[])
+    
+    if not resume_skills:
+        return SkillMatchSchema(match_percentage=0.0, missing_skills=jd_skills, matching_skills=[])
+
+    structured_llm = llm.with_structured_output(SkillMatchSchema)
+    
+    system_prompt = """
+    You are a Technical Recruiter. Compare the Candidate's Skills vs Job Requirements.
+    
+    Rules:
+    1. USE SEMANTIC MATCHING. 
+       - If JD asks for "Neural Networks" and Candidate has "TensorFlow" or "Deep Learning", COUNT IT AS A MATCH.
+       - If JD asks for "AI/ML" and Candidate has "Scikit-learn" or "Computer Vision", COUNT IT AS A MATCH.
+       - If JD asks for "Python" and Candidate has "Django", COUNT IT AS A MATCH.
+    2. Be generous with related technologies.
+    3. Return a score (0-100) representing how well the candidate covers the requirements.
+    """
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "Candidate Skills: {resume_skills}\n\nJob Requirements: {jd_skills}"),
+    ])
+    
+    chain = prompt | structured_llm
+    return chain.invoke({"resume_skills": str(resume_skills), "jd_skills": str(jd_skills)})
+
+# --- 3. The BS Detector (Heuristics) ---
 
 def analyze_impact_heuristics(work_experience):
     """
@@ -53,30 +92,30 @@ def analyze_impact_heuristics(work_experience):
     strong_bullets = 0
     feedback = []
     
-    # Regex for metrics (e.g., 20%, $50k, +10x, 500 users)
-    metric_pattern = r"(\d+%|\$\d+|\d+x|\+\d+|\d+ users|\d+ customers|\d+ requests)"
+    # Expanded Regex for Impact
+    metric_pattern = r"(\d+%|\$\d+|\d+x|\+\d+|increased|decreased|improved|reduced|saved|generated|managed|led|scaled|launched|users|customers|accuracy|latency)"
 
     for role in work_experience:
-        if not role.key_achievements:
-            feedback.append(f"Role '{role.role}' has no bullet points.")
+        achievements = role.get('key_achievements', [])
+        if not achievements:
             continue
             
-        for bullet in role.key_achievements:
+        for bullet in achievements:
             total_bullets += 1
-            if re.search(metric_pattern, bullet):
+            if re.search(metric_pattern, bullet, re.IGNORECASE):
                 strong_bullets += 1
             else:
-                # Limit feedback to first 3 issues to avoid clutter
                 if len(feedback) < 3:
-                    feedback.append(f"Weak point in '{role.role}': '{bullet[:50]}...' lacks metrics.")
+                    role_title = role.get('role', 'Role')
+                    feedback.append(f"Weak point in '{role_title}': '{bullet[:40]}...' - Add metrics/results.")
 
     if total_bullets == 0:
-        return 0, ["Add bullet points to your experience."]
+        return 0, ["Add bullet points with metrics to your experience."]
 
     score = int((strong_bullets / total_bullets) * 100)
     return score, feedback
 
-# --- 3. The Main Coordinator ---
+# --- 4. The Main Coordinator ---
 
 def analyze_resume_compatibility(parsed_resume, jd_text):
     """
@@ -85,44 +124,25 @@ def analyze_resume_compatibility(parsed_resume, jd_text):
     # 1. Parse JD into Structure
     parsed_jd = parse_job_description(jd_text)
     
-    # 2. Skill Match (Set Intersection)
-    resume_skills = set([s.lower() for s in parsed_resume['skills']])
-    jd_skills = set([s.lower() for s in parsed_jd.required_skills])
+    resume_skills = parsed_resume.get('skills', [])
+    jd_skills = parsed_jd.required_skills
     
-    matched_skills = resume_skills.intersection(jd_skills)
-    missing_skills = jd_skills - resume_skills
-    
-    skill_score = (len(matched_skills) / len(jd_skills) * 100) if jd_skills else 100
-    
-    # 3. Impact Score (Heuristics)
-    # Note: parsing Pydantic objects back from JSON might require converting lists to objects
-    # For simplicity, we assume parsed_resume is the Dictionary we saved to DB
-    
-    # We need to access the 'work_experience' list from the dictionary
-    experience_list = parsed_resume.get('work_experience', [])
-    
-    # We need to treat them as objects for the helper function, or adjust helper.
-    # Let's adjust helper inputs quickly via a temporary object-like wrapper or just processing dicts
-    # Re-using the logic above, but adapted for Dicts:
-    impact_score = 0
-    impact_feedback = []
-    
-    total_bullets = 0
-    strong_bullets = 0
-    metric_pattern = r"(\d+%|\$\d+|\d+x|\+\d+|\d+ users|\d+ customers)"
-    
-    for role in experience_list:
-        achievements = role.get('key_achievements', [])
-        for bullet in achievements:
-            total_bullets += 1
-            if re.search(metric_pattern, bullet):
-                strong_bullets += 1
-            elif len(impact_feedback) < 3:
-                role_name = role.get('role', 'Unknown Role')
-                impact_feedback.append(f"Weak Point ({role_name}): Add metrics to '{bullet[:40]}...'")
+    print(f"JD Requirements: {jd_skills}")
+    print(f"Resume Skills: {resume_skills}")
 
-    if total_bullets > 0:
-        impact_score = int((strong_bullets / total_bullets) * 100)
+    # 2. Semantic Skill Match (AI Powered)
+    print("Performing Semantic Analysis...")
+    semantic_result = evaluate_semantic_match(resume_skills, jd_skills)
+    
+    skill_score = semantic_result.match_percentage
+    missing_skills = semantic_result.missing_skills
+    
+    print(f"Semantic Score: {skill_score}")
+    print(f"Actually Missing: {missing_skills}")
+
+    # 3. Impact Score (Heuristics)
+    experience_list = parsed_resume.get('work_experience', [])
+    impact_score, impact_feedback = analyze_impact_heuristics(experience_list)
     
     # 4. Final Weighted Score
     # Skills (60%), Formatting/Impact (40%)
@@ -134,6 +154,6 @@ def analyze_resume_compatibility(parsed_resume, jd_text):
             "Skill_Match": round(skill_score, 1),
             "Impact_Score": round(impact_score, 1)
         },
-        "missing_keywords": list(missing_skills),
+        "missing_keywords": missing_skills,
         "improved_suggestion": impact_feedback
     }

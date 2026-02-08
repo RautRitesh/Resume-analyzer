@@ -7,6 +7,11 @@
 
 <style>
     body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; }
+    
+    /* Custom Circular Progress (Tailwind doesn't do conic-gradients arbitrarily yet) */
+    .progress-circle {
+        background: conic-gradient(#4F46E5 var(--percent), #E5E7EB 0);
+    }
 </style>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -26,89 +31,56 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-blue-600 p-6 rounded-xl shadow-lg text-white flex flex-col justify-between">
-            <div>
-                <p class="text-blue-100 font-medium uppercase tracking-wider text-xs">ATS Score</p>
-                <p class="text-6xl font-black mt-2">{{ analysis.overall_match_score }}<span class="text-3xl">%</span></p>
-            </div>
-            <p class="text-sm text-blue-100 mt-4">{{ analysis.analysis_summary|truncatewords:10 }}</p>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-gray-700">Semantic Match</h3>
-                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">40% Weight</span>
-            </div>
-            <p class="text-4xl font-bold text-indigo-600">{{ analysis.section_match_score.Semantic_Match|default:0 }}%</p>
-            <p class="text-xs text-gray-500 mt-2">Conceptual similarity to job description.</p>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-gray-700">Hard Keywords</h3>
-                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">40% Weight</span>
-            </div>
-            <p class="text-4xl font-bold text-green-600">{{ analysis.section_match_score.Keyword_Match|default:0 }}%</p>
-            <p class="text-xs text-gray-500 mt-2">Exact match of critical hard skills.</p>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-gray-700">Impact Score</h3>
-                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">20% Weight</span>
-            </div>
-            <p class="text-4xl font-bold text-purple-600">{{ analysis.section_match_score.Impact_Score|default:0 }}%</p>
-            <p class="text-xs text-gray-500 mt-2">Quality of writing and metrics.</p>
-        </div>
-    </div>
-
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         <div class="lg:col-span-4 space-y-6">
             
-            <div class="bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
-                <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center">
-                    <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    <h2 class="font-bold text-red-800">Missing Keywords</h2>
-                </div>
-                <div class="p-6">
-                    <p class="text-sm text-gray-600 mb-4">Critical keywords missing from your resume:</p>
-                    <div class="flex flex-wrap gap-2">
-                        {% for key in analysis.missing_keywords %}
-                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium border border-red-200">
-                            {{ key }}
-                        </span>
-                        {% empty %}
-                        <span class="text-green-600 font-medium text-sm">✨ No critical keywords missing.</span>
-                        {% endfor %}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">Match Score</h2>
+                
+                <div class="relative w-40 h-40 mx-auto rounded-full flex items-center justify-center progress-circle" style="--percent: {{ analysis.overall_match_score }}%;">
+                    <div class="absolute inset-2 bg-white rounded-full flex flex-col items-center justify-center">
+                        <span class="text-4xl font-bold text-gray-900">{{ analysis.overall_match_score }}%</span>
+                        <span class="text-xs text-gray-400 font-medium uppercase mt-1">Match</span>
                     </div>
                 </div>
-            </div> 
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-gray-100">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Skill Match</p>
+                        <p class="text-xl font-bold text-emerald-600">{{ analysis.section_match_score.Skill_Match }}%</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Impact Score</p>
+                        <p class="text-xl font-bold text-blue-600">{{ analysis.section_match_score.Impact_Score }}%</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div class="flex items-center mb-4">
-                    <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mr-3">
+                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 mr-3">
                         <i class="fas fa-exclamation-triangle text-sm"></i>
                     </div>
                     <h3 class="text-lg font-bold text-gray-900">Missing Skills</h3>
                 </div>
+                
                 <div class="flex flex-wrap gap-2">
-                    {% for skill in analysis.missing_skills %} 
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                    {% for skill in analysis.missing_keywords %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-700 border border-red-100">
                             {{ skill }}
                         </span>
                     {% empty %}
                         <p class="text-sm text-emerald-600 flex items-center">
-                            <i class="fas fa-check-circle mr-2"></i> All required skills present.
+                            <i class="fas fa-check-circle mr-2"></i> Perfect match! No missing skills.
                         </p>
                     {% endfor %}
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div class="flex items-center mb-4">
-                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 mr-3">
+                    <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mr-3">
                         <i class="fas fa-lightbulb text-sm"></i>
                     </div>
                     <h3 class="text-lg font-bold text-gray-900">Improvements</h3>
@@ -120,11 +92,10 @@
                             <span class="text-sm text-gray-600 leading-relaxed">{{ suggestion }}</span>
                         </li>
                     {% empty %}
-                        <li class="text-sm text-gray-500 italic">No formatting suggestions.</li>
+                        <li class="text-sm text-gray-500 italic">No major formatting issues found.</li>
                     {% endfor %}
                 </ul>
             </div>
-
         </div>
 
         <div class="lg:col-span-8 space-y-6">
@@ -133,13 +104,14 @@
                 <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div>
                         <h2 class="text-2xl font-bold mb-2">Ready for the Interview?</h2>
-                        <p class="text-indigo-100 max-w-md">Our AI Multi-Agent system has prepared questions based on your resume gaps.</p>
+                        <p class="text-indigo-100 max-w-md">Our AI Multi-Agent system has prepared questions based on your resume gaps. Test yourself before the real deal.</p>
                     </div>
                     <a href="#" class="px-6 py-3 bg-white text-indigo-700 font-bold rounded-xl shadow hover:bg-gray-50 transition transform hover:-translate-y-1">
                         Start Simulator <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
                 <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
+                <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-black opacity-10 rounded-full blur-2xl"></div>
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
@@ -161,7 +133,7 @@
                 <div class="p-6">
                     
                     <div id="content-experience" class="space-y-8 block">
-                        {% for job in analysis.parsed_resume_data.work_experience %}
+                        {% for job in resume.work_experience %}
                             <div class="relative pl-8 border-l-2 border-gray-100 last:border-0">
                                 <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-indigo-600 border-4 border-white shadow-sm"></div>
                                 
@@ -194,7 +166,7 @@
                     </div>
 
                     <div id="content-projects" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {% for project in analysis.parsed_resume_data.projects %}
+                        {% for project in resume.projects %}
                             <div class="p-4 border border-gray-100 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md transition-all duration-200">
                                 <h4 class="font-bold text-gray-900 mb-2">{{ project.name }}</h4>
                                 <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ project.description }}</p>
@@ -211,7 +183,7 @@
 
                     <div id="content-summary" class="hidden">
                         <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg">
-                            <p class="text-indigo-900 italic leading-relaxed">"{{ analysis.parsed_resume_data.summary }}"</p>
+                            <p class="text-indigo-900 italic leading-relaxed">"{{ resume.summary }}"</p>
                         </div>
                     </div>
 
@@ -225,26 +197,23 @@
     function switchTab(tabName) {
         // 1. Hide all content
         ['experience', 'projects', 'summary'].forEach(name => {
-            const content = document.getElementById(`content-${name}`);
-            const tabBtn = document.getElementById(`tab-${name}`);
-            
-            content.classList.add('hidden');
-            content.classList.remove('block');
-            content.classList.remove('grid'); 
+            document.getElementById(`content-${name}`).classList.add('hidden');
+            document.getElementById(`content-${name}`).classList.remove('block');
+            document.getElementById(`content-${name}`).classList.remove('grid'); // for projects grid
             
             // Reset Tab Styles
+            const tabBtn = document.getElementById(`tab-${name}`);
             tabBtn.classList.remove('border-indigo-500', 'text-indigo-600');
             tabBtn.classList.add('border-transparent', 'text-gray-500');
         });
 
         // 2. Show selected content
-        const activeContent = document.getElementById(`content-${tabName}`);
-        activeContent.classList.remove('hidden');
-        
+        const content = document.getElementById(`content-${tabName}`);
+        content.classList.remove('hidden');
         if(tabName === 'projects') {
-            activeContent.classList.add('grid');
+            content.classList.add('grid');
         } else {
-            activeContent.classList.add('block');
+            content.classList.add('block');
         }
 
         // 3. Highlight selected tab
