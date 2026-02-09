@@ -45,8 +45,12 @@ def resumeanalysis(request):
             print("Parsing Resume...")
             structured_data = parse_resume_content(raw_text)
             analysis.parsed_resume_data = structured_data
+            print("The parsed_resume_data is:------------")
+            print(analysis.parsed_resume_data)
+            print("----------------------------------------------")
             
             # 4. Analyze (Comparison & Heuristics)
+            #updated for more score
             print("Analyzing Compatibility...")
             # --- FIX: Call the correct function name ---
             results = analyze_resume_compatibility(structured_data, job_description)
