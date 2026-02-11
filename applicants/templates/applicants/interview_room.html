@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+    /* Hide scrollbar but keep functionality */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Markdown Styles */
+    .prose p { margin-bottom: 0.5em; }
+    .prose ul { margin-top: 0.5em; margin-bottom: 0.5em; }
+    .prose li { margin-top: 0; margin-bottom: 0; }
+    .prose pre { background-color: #1e293b; color: #e2e8f0; border-radius: 0.5rem; padding: 1rem; }
+    .prose code { color: #ea580c; background-color: #ffedd5; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-weight: 600; }
+    .prose pre code { color: inherit; background-color: transparent; padding: 0; }
+    
+    /* Animation */
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
+    @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<div class="flex flex-col h-[calc(100vh-64px)] bg-white text-gray-800 font-sans relative">
+    
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white/90 backdrop-blur-md sticky top-0 z-20">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-500 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-200">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-gray-900 text-lg leading-tight">AI Interviewer</h1>
+                <p class="text-xs text-gray-500 font-medium">Screening for: {{ analysis.job_title }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-100">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+            </span>
+            Live
+        </div>
+    </div>
+
+    <div id="chat-box" class="flex-1 overflow-y-auto no-scrollbar scroll-smooth pb-40"> <div class="max-w-4xl mx-auto px-4 py-8 space-y-10">
+            
+            {% for msg in chat_history %}
+                {% if msg.role == 'ai' %}
+                    <div class="flex gap-5 fade-in">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                                AI
+                            </div>
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <div class="font-semibold text-sm text-gray-900">Interviewer</div>
+                            <div class="prose prose-slate max-w-none text-gray-700 leading-relaxed markdown-body bg-white">
+                                {{ msg.content }}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="flex gap-5 flex-row-reverse fade-in">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-bold">
+                                You
+                            </div>
+                        </div>
+                        <div class="flex-1 text-right">
+                            <div class="bg-[#f0f4f9] inline-block px-6 py-4 rounded-2xl rounded-tr-sm text-gray-800 text-left shadow-sm border border-gray-100 text-base leading-relaxed">
+                                {{ msg.content|linebreaksbr }}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            <div id="typing-indicator" class="hidden flex gap-5 fade-in">
+                <div class="flex-shrink-0 mt-1">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">AI</div>
+                </div>
+                <div class="flex items-center gap-1.5 h-8 p-2">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-white via-white to-transparent pb-8 pt-12 px-4 z-20">
+        <div class="max-w-4xl mx-auto">
+            <div class="relative bg-gray-50 border border-gray-300 rounded-[28px] shadow-xl hover:shadow-2xl transition-all duration-300 focus-within:ring-4 focus-within:ring-blue-100 focus-within:border-blue-400">
+                
+                <textarea 
+                    id="user-input" 
+                    rows="3" 
+                    class="w-full bg-transparent border-0 focus:ring-0 text-gray-800 placeholder-gray-500 resize-none py-4 pl-6 pr-14 text-lg leading-relaxed max-h-60"
+                    placeholder="Type your answer here..."
+                    style="min-height: 80px;"
+                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                ></textarea>
+
+                <button 
+                    onclick="sendMessage()"
+                    class="absolute bottom-3 right-3 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all active:scale-95 shadow-md flex items-center justify-center group"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 group-hover:translate-x-0.5 transition-transform">
+                        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                    </svg>
+                </button>
+            </div>
+            <p class="text-center text-xs text-gray-400 mt-3 font-medium">Interviewer is AI-generated. Review code before running.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const typingIndicator = document.getElementById('typing-indicator');
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // Parse Markdown for existing messages
+        document.querySelectorAll('.markdown-body').forEach(el => {
+            const rawText = el.textContent.trim();
+            if (rawText) el.innerHTML = marked.parse(rawText);
+        });
+        scrollToBottom();
+    });
+
+    function scrollToBottom() {
+        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    }
+
+    // Submit on Enter (Shift+Enter for newline)
+    userInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // Add User Message
+        const userHtml = `
+            <div class="flex gap-5 flex-row-reverse fade-in">
+                <div class="flex-shrink-0 mt-1">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-bold">You</div>
+                </div>
+                <div class="flex-1 text-right">
+                    <div class="bg-[#f0f4f9] inline-block px-6 py-4 rounded-2xl rounded-tr-sm text-gray-800 text-left shadow-sm border border-gray-100 text-base leading-relaxed">
+                        ${message.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            </div>
+        `;
+        typingIndicator.insertAdjacentHTML('beforebegin', userHtml);
+        
+        userInput.value = '';
+        userInput.style.height = 'auto'; 
+        scrollToBottom();
+
+        // Show Loading
+        typingIndicator.classList.remove('hidden');
+        scrollToBottom();
+
+        try {
+            const response = await fetch("{% url 'chat_api' analysis.id %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+            typingIndicator.classList.add('hidden');
+
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+
+            // Parse Markdown & Add AI Message
+            const parsedContent = marked.parse(data.response);
+            const aiHtml = `
+                <div class="flex gap-5 fade-in">
+                    <div class="flex-shrink-0 mt-1">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                            AI
+                        </div>
+                    </div>
+                    <div class="flex-1 space-y-2">
+                        <div class="font-semibold text-sm text-gray-900">Interviewer</div>
+                        <div class="prose prose-slate max-w-none text-gray-700 leading-relaxed markdown-body bg-white">
+                            ${parsedContent}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            typingIndicator.insertAdjacentHTML('beforebegin', aiHtml);
+            scrollToBottom();
+
+        } catch (error) {
+            console.error(error);
+            typingIndicator.classList.add('hidden');
+            alert("Network error.");
+        }
+    }
+</script>
+{% endblock %}
