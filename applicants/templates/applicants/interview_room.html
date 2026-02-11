@@ -9,31 +9,30 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* 2. Markdown Typography - FIXED COLORS */
+    /* 2. Markdown Typography */
     .prose p { margin-bottom: 0.5em; }
     .prose ul { margin-top: 0.5em; margin-bottom: 0.5em; }
     .prose li { margin-top: 0; margin-bottom: 0; }
     
-    /* Code Blocks (e.g. ```python ... ```) -> Standard Dark Theme */
+    /* Code Blocks */
     .prose pre { 
-        background-color: #1e293b; /* Slate-800 (Dark Blue-Grey) */
-        color: #e2e8f0;            /* Light Text */
+        background-color: #1e293b; 
+        color: #e2e8f0;            
         border-radius: 0.5rem; 
         padding: 1rem; 
         font-size: 0.9em;
     }
     
-    /* Inline Code (e.g. `variable`) -> Standard Light Gray (No Yellow) */
+    /* Inline Code */
     .prose code { 
-        color: #0f172a;            /* Slate-900 (Black-ish) */
-        background-color: #f1f5f9; /* Slate-100 (Light Gray) */
+        color: #0f172a;            
+        background-color: #f1f5f9; 
         padding: 0.2rem 0.4rem; 
         border-radius: 0.25rem; 
         font-weight: 600; 
         font-size: 0.9em;
     }
     
-    /* Fix: Remove background from code inside pre blocks so they don't double up */
     .prose pre code { 
         color: inherit; 
         background-color: transparent; 
@@ -134,30 +133,28 @@
         </div>
     </div>
 
-    <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pb-8 pt-12 px-6 z-20">
+    <div class="absolute bottom-0 left-0 w-full">
         <div class="max-w-5xl mx-auto">
-            <div class="relative group">
-                <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-[35px] blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-                <div class="relative flex items-end gap-2 bg-white rounded-[32px] shadow-xl border border-gray-200 focus-within:ring-4 focus-within:ring-blue-50 focus-within:border-blue-300 transition-all duration-300">
-                    <textarea 
-                        id="user-input" 
-                        rows="1"
-                        class="w-full bg-transparent border-0 focus:ring-0 text-gray-800 placeholder-gray-400 resize-none py-5 pl-8 pr-16 text-lg leading-relaxed max-h-60 rounded-[32px]"
-                        placeholder="Type your answer here..."
-                        style="min-height: 72px;"
-                        oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
-                    ></textarea>
+            <div class="relative flex items-end gap-2 bg-white rounded-[32px] shadow-md border border-gray-200 focus-within:border-blue-400 transition-all duration-300">
+                <textarea 
+                    id="user-input" 
+                    rows="1"
+                    class="w-full bg-transparent border-0 focus:ring-0 text-gray-800 placeholder-gray-400 resize-none py-5 pl-8 pr-16 text-lg leading-relaxed max-h-60 rounded-[32px]"
+                    placeholder="Type your answer here..."
+                    style="min-height: 72px;"
+                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                ></textarea>
 
-                    <button 
-                        onclick="sendMessage()"
-                        class="absolute bottom-3 right-3 p-3.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-200 flex items-center justify-center"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                            <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-                        </svg>
-                    </button>
-                </div>
+                <button 
+                    onclick="sendMessage()"
+                    class="absolute bottom-3 right-3 p-3.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-200 flex items-center justify-center"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                    </svg>
+                </button>
             </div>
+            
             <p class="text-center text-xs text-gray-400 mt-4 font-medium">AI generated content. Code provided may require verification.</p>
         </div>
     </div>
