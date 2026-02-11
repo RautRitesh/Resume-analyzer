@@ -5,25 +5,60 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <style>
-    /* Hide scrollbar but keep functionality */
+    /* 1. Scrollbar Styling */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Markdown Styles */
+    /* 2. Markdown Typography - FIXED COLORS */
     .prose p { margin-bottom: 0.5em; }
     .prose ul { margin-top: 0.5em; margin-bottom: 0.5em; }
     .prose li { margin-top: 0; margin-bottom: 0; }
-    .prose pre { background-color: #1e293b; color: #e2e8f0; border-radius: 0.5rem; padding: 1rem; }
-    .prose code { color: #ea580c; background-color: #ffedd5; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-weight: 600; }
     
-    /* Animations */
+    /* Code Blocks (e.g. ```python ... ```) -> Standard Dark Theme */
+    .prose pre { 
+        background-color: #1e293b; /* Slate-800 (Dark Blue-Grey) */
+        color: #e2e8f0;            /* Light Text */
+        border-radius: 0.5rem; 
+        padding: 1rem; 
+        font-size: 0.9em;
+    }
+    
+    /* Inline Code (e.g. `variable`) -> Standard Light Gray (No Yellow) */
+    .prose code { 
+        color: #0f172a;            /* Slate-900 (Black-ish) */
+        background-color: #f1f5f9; /* Slate-100 (Light Gray) */
+        padding: 0.2rem 0.4rem; 
+        border-radius: 0.25rem; 
+        font-weight: 600; 
+        font-size: 0.9em;
+    }
+    
+    /* Fix: Remove background from code inside pre blocks so they don't double up */
+    .prose pre code { 
+        color: inherit; 
+        background-color: transparent; 
+        padding: 0; 
+    }
+    
+    /* 3. Animation */
     .fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
     @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+    /* 4. Full Screen Layout Fix */
+    #interview-interface {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 64px; /* JS will adjust this automatically */
+        z-index: 50;
+        background-color: white;
+    }
 </style>
 
-<div class="flex flex-col h-[calc(100vh-64px)] w-full bg-white text-gray-800 font-sans relative">
+<div id="interview-interface" class="flex flex-col font-sans">
     
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white/95 backdrop-blur-sm sticky top-0 z-20 shadow-sm">
+    <div class="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-white/95 backdrop-blur-sm shadow-sm z-20">
         <div class="flex items-center gap-4">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
@@ -53,7 +88,7 @@
                         <div class="flex-shrink-0 mt-1">
                             <div class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-blue-600 shadow-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                                    <path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z" clip-rule="evenodd" />
+                                    <path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z" clip-rule="evenodd" />
                                 </svg>
                             </div>
                         </div>
@@ -86,7 +121,7 @@
                 <div class="flex-shrink-0">
                     <div class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-blue-600">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 animate-pulse">
-                            <path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z" clip-rule="evenodd" />
                         </svg>
                     </div>
                 </div>
@@ -96,7 +131,6 @@
                     <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-150"></div>
                 </div>
             </div>
-            
         </div>
     </div>
 
@@ -104,9 +138,7 @@
         <div class="max-w-5xl mx-auto">
             <div class="relative group">
                 <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-[35px] blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-                
                 <div class="relative flex items-end gap-2 bg-white rounded-[32px] shadow-xl border border-gray-200 focus-within:ring-4 focus-within:ring-blue-50 focus-within:border-blue-300 transition-all duration-300">
-                    
                     <textarea 
                         id="user-input" 
                         rows="1"
@@ -129,28 +161,36 @@
             <p class="text-center text-xs text-gray-400 mt-4 font-medium">AI generated content. Code provided may require verification.</p>
         </div>
     </div>
-
 </div>
 
 <script>
+    function adjustLayout() {
+        const portal = document.getElementById('interview-interface');
+        const header = document.querySelector('header') || document.querySelector('nav');
+        if (header && portal) {
+            portal.style.top = `${header.offsetHeight}px`;
+        }
+    }
+    window.addEventListener('load', adjustLayout);
+    window.addEventListener('resize', adjustLayout);
+
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
     const typingIndicator = document.getElementById('typing-indicator');
 
     document.addEventListener("DOMContentLoaded", () => {
-        // Parse Markdown for existing messages
         document.querySelectorAll('.markdown-body').forEach(el => {
             const rawText = el.textContent.trim();
             if (rawText) el.innerHTML = marked.parse(rawText);
         });
         scrollToBottom();
+        adjustLayout();
     });
 
     function scrollToBottom() {
         chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
     }
 
-    // Submit on Enter (Shift+Enter for newline)
     userInput.addEventListener("keydown", function(event) {
         if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
@@ -162,7 +202,6 @@
         const message = userInput.value.trim();
         if (!message) return;
 
-        // 1. Add User Message
         const userHtml = `
             <div class="flex gap-6 flex-row-reverse fade-in">
                 <div class="flex-shrink-0 mt-1">
@@ -181,35 +220,24 @@
         `;
         typingIndicator.insertAdjacentHTML('beforebegin', userHtml);
         
-        // Reset Input
         userInput.value = '';
         userInput.style.height = 'auto'; 
         scrollToBottom();
-
-        // Show Loading
         typingIndicator.classList.remove('hidden');
         scrollToBottom();
 
         try {
-            // API Call
             const response = await fetch("{% url 'chat_api' analysis.id %}", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
+                headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
                 body: JSON.stringify({ message: message })
             });
 
             const data = await response.json();
             typingIndicator.classList.add('hidden');
 
-            if (data.error) {
-                alert("Error: " + data.error);
-                return;
-            }
+            if (data.error) { alert("Error: " + data.error); return; }
 
-            // Parse Markdown & Add AI Message
             const parsedContent = marked.parse(data.response);
             const aiHtml = `
                 <div class="flex gap-6 fade-in group">
@@ -228,14 +256,12 @@
                     </div>
                 </div>
             `;
-            
             typingIndicator.insertAdjacentHTML('beforebegin', aiHtml);
             scrollToBottom();
 
         } catch (error) {
             console.error(error);
             typingIndicator.classList.add('hidden');
-            alert("Network error.");
         }
     }
 </script>
